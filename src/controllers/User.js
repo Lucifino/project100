@@ -56,7 +56,7 @@ module.exports = {
       })
     },
 
-    sendFriendRequest: (req,res) => {
+    processFriendRequest: (req,res) => {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
@@ -69,12 +69,22 @@ module.exports = {
         return USER.findOne({username})
         .then(user2 => {
           if(!user2) return res.send((response(false, `User2 does not exist!`)));
-         // if(user.friend_requests.equals(user2._id)) return res.send((response(false, `User already your Friend!`)));
-          return USER.findByIdAndUpdate(user2._id, { $push: { friend_requests: user._id }})
-           .then(result => {
-           if(!result) return res.send(response(false, `Update Error!`));
-           return res.send(response(true, `Succesfully Friend Request Sent!`, result))
-          })
+
+          //IF USER EXISTS ALREADY, PULL IT FROM THE ARRAY
+          if(user2.friend_requests.includes(user._id)){
+            return user2.updateOne({$pull: {friend_requests: user._id}}, {new: true})
+            .then(result => {
+              if(!result) return res.send(response(false, `Update Error!`));
+              return res.send(response(true, `Succesfully removed request!`, result))
+            })
+          }else{
+            // ELSE JUST PUSH
+            return user2.updateOne({ $push: { friend_requests: user._id }}, {new:true})
+            .then(result => {
+              if(!result) return res.send(response(false, `Update Error!`));
+              return res.send(response(true, `Succesfully sent friend request!`, result))
+            })
+          }
         })
       })
     },

@@ -9,7 +9,10 @@ const host = process.env.DB_HOST || 'localhost'
 const database = process.env.DATABASE;
 const routers = require('./src/routers');
 
+const cors = require('cors');
+
 const app = express();
+app.use(cors());
 
 app.use(API_STRING, routers);
 
