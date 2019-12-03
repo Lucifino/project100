@@ -71,15 +71,15 @@ module.exports = {
           if(!user2) return res.send((response(false, `User2 does not exist!`)));
 
           //IF USER EXISTS ALREADY, PULL IT FROM THE ARRAY
-          if(user2.friend_requests.includes(user._id)){
-            return user2.updateOne({$pull: {friend_requests: user._id}}, {new: true})
+          if(user2.friend_requests.includes(user.username)){
+            return user2.updateOne({$pull: {friend_requests: user.username}}, {new: true})
             .then(result => {
               if(!result) return res.send(response(false, `Update Error!`));
               return res.send(response(true, `Succesfully removed request!`, result))
             })
           }else{
             // ELSE JUST PUSH
-            return user2.updateOne({ $push: { friend_requests: user._id }}, {new:true})
+            return user2.updateOne({ $push: { friend_requests: user.username }}, {new:true})
             .then(result => {
               if(!result) return res.send(response(false, `Update Error!`));
               return res.send(response(true, `Succesfully sent friend request!`, result))
@@ -112,24 +112,27 @@ module.exports = {
 
     acceptFriendRequest: (req,res) => {
       const {username} = req.body;
+      const source_id = req.POST_VERIFICATION.user_id;
+
       if(!username) return res.send(response(false, `Username is required!`));
-      const search_id = req.POST_VERIFICATION.user_id
-      return USER.findOne({search_id})
-      .then(user => {
-        if(!user) return res.send((response(false, `User does not exist!`)));
+      
+      return USER.findById(source_id)
+      .then(source_user =>{
+        if(!source_user) return res.send(response(false, `Your user doesn't exist`));
         return USER.findOne({username})
-        .then(user2 => {
-          if(!user2) return res.send((response(false, `User does not exist!`)));
-          if(!user.friend_requests.equals(user2._id)) return res.send((response(false, `Request does not exist!`)));
-          return user.personal_information.friend.push(user2._id)
-          .then(result => {
-            if(!result) return res.send(response(false, `Update Error!`));
-            return user.personal_information.friend_requests.pull(user2._id)
-            .then(result => {
-              if(!result) return res.send(response(false, `Update Error!`));
-              return res.send(response(true, `Succesfully Friend Request Deleted!`, result))
+        .then(user_to_accept => {
+          if(!user_to_accept) return res.send(response(false, `User doesn't exist!`));
+          if(source_user.friend_requests.includes(username)){
+            return source_user.updateOne({$pull: {friend_requests: username}, $push: {friends: username}})
+            .then(() => {
+              return user_to_accept.updateOne({$push: {friends: source_user.username}})
+              .then(() => {
+                return res.send(response(true, `Succesfully accepted ${username}`));
+              })
             })
-          })
+          }else{
+            return res.send(response(false, `User did not send a friend request!`));
+          }
         })
       })
     },

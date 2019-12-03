@@ -7,8 +7,24 @@ const {reactions} = require('../utilities/statics');
 
 module.exports = {
   queries: {
+
+    getAllPosts: (req, res) => {
+      //PARAMS
+      const {username} = req.POST_VERIFICATION;
+      console.log(username);
+      return USER.findOne({username})
+      .then(user => {
+        const {friends} = user.friends;
+        return POST.find({$or: [{author: {$in: friends} }, {destination_wall: username}]}).sort({createdAt: -1})
+        .then(posts => {
+          return res.send(response(true, `Sucessfully queried feed`, posts));
+        })
+      })
+    },
+
     getAllPostsFromWall: (req, res) => {
-      const {destination_wall} = req.POST_VERIFICATION.username;
+
+      const destination_wall = req.POST_VERIFICATION.username;
       if(!destination_wall) return res.send(response(false, 'Username is required!'));
       return POST.find({destination_wall}).sort({createdAt: -1})
       .then(result => {
@@ -27,26 +43,23 @@ module.exports = {
       })
     }
   },
+
   mutations: {
 
     createPost: (req, res) => {
-      const {author, destination_wall, content} = req.body;
+      const author = req.POST_VERIFICATION.username;
+      const {destination_wall, content} = req.body;
 
       //@ Validate if user has already the same post
       return USER.findOne({username: destination_wall})
       .then(user => {
-        if(user) return res.send(response(false, `User does not exist!`));
+        if(!user) return res.send(response(false, `User does not exist!`));
         const new_post = new POST({
           author, destination_wall, content
         });
         return new_post.save()
-        .then(post => {
-          if(!post) return res.send((response(false, `Post not Created!`)));
-          return USER.findOneAndUpdate( user._id, { $push: { posts: new_post._id }})
-          .then(result =>{
-            if(!post) return res.send((response(false, `Post not Added!`)));
-            return res.send(response(true, `Succesfully Added Post!`, result))
-          })
+        .then(result => {
+          return res.send(response(true, `Succesfully created post`, result));
         })
       })
     },
