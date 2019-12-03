@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const REACTION_SCHEMA = require('../prerequisites/Reaction');
+const COMMENT_SCHEMA= require('../prerequisites/Comment');
+
 const POST_SCHEMA = new Schema({
   author: {
     type: String,

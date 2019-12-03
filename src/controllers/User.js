@@ -1,7 +1,7 @@
 const USER = require('../models/entities/User');
 const FRIEND_REQUEST = require('../models/prerequisites/Friend_Requests')
 const POST = require('../models/entities/Post');
-const COMMENT = require('../models/entities/Comment')
+const COMMENT = require('../models/prerequisites/Comment')
 
 
 const bcrypt = require('bcryptjs');
@@ -63,12 +63,15 @@ module.exports = {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
+      const search_user = req.POST_VERIFICATION.username
+      const _id = req.POST_VERIFICATION.user_id
+
       return USER.findOne({username: req.POST_VERIFICATION.username})
       .then(user => {
-        if(!user) return res.send((response(false, `User does not exist!`)));
+        if(!user) return res.send((response(false, `User1 does not exist!`)));
         return USER.findOne({username})
         .then(user2 => {
-          if(!user2) return res.send((response(false, `User does not exist!`)));
+          if(!user2) return res.send((response(false, `User2 does not exist!`)));
 
           //IF USER EXISTS ALREADY, PULL IT FROM THE ARRAY
           if(user2.friend_requests.includes(user.username)){
@@ -176,6 +179,7 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         if(old_password == new_password) return res.send(response(false, `New password cannot be the same as old password`));
         return bcrypt.compare(old_password, user.password, (err, result) => {
+          console.log(result);
           if(result){
             return bcrypt.hash(new_password, salt_rounds, (err, hash) => {
               return user.updateOne({password: hash})

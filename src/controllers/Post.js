@@ -1,6 +1,6 @@
 const POST = require('../models/entities/Post');
 const USER = require('../models/entities/User');
-const COMMENT = require('../models/entities/Comment')
+const COMMENT = require('../models/prerequisites/Comment')
 
 const {response} = require('../utilities/helpers');
 const {reactions} = require('../utilities/statics');
@@ -132,7 +132,7 @@ module.exports = {
       const post_id = req.body;
       if(!_id) return res.send(response(false, `_id is required!`));
 
-      return COMMENT.deleteMany({post_id: post_id})
+      return COMMENT.deleteManay({collection_id: post_id})
       .then(comment => {
         if(!comment) return res.send(response(false, `comments not deleted!`));
         return POST.deleteOne({_id: post_id})
