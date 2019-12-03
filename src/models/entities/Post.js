@@ -17,12 +17,7 @@ const POST_SCHEMA = new Schema({
     type: String,
     required: true,
     default: '',
-  },
-  comments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'COMMENT',
-    required: false,
-  }],
+  }
 },
   {
     timestamps: true 
