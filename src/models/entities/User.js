@@ -22,7 +22,15 @@ const USER_SCHEMA = new Schema({
   is_logged_in: {
     type: Boolean,
     default: false,
-  }
+  },
+  friends: [{
+    type: Schema.Types.ObjectId,
+    required: false
+  }],
+  friend_requests: [{
+    type: Schema.Types.ObjectId,
+    required: false
+  }]
 })
 
 const USER = mongoose.model('USER', USER_SCHEMA);

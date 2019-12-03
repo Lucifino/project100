@@ -70,7 +70,7 @@ module.exports = {
         .then(user2 => {
           if(!user2) return res.send((response(false, `User2 does not exist!`)));
          // if(user.friend_requests.equals(user2._id)) return res.send((response(false, `User already your Friend!`)));
-          return USER.findOneAndUpdate( user2._id,{ $push: { personal_information: { friend_requests: user._id } } })
+          return USER.findOneAndUpdate( user2._id,{ $push: { friend_requests: user._id }})
            .then(result => {
            if(!result) return res.send(response(false, `Update Error!`));
            return res.send(response(true, `Succesfully Friend Request Sent!`, result))
@@ -125,7 +125,7 @@ module.exports = {
     },
 
     updateUserPassword: (req,res) => {
-      const {username, old_pass, new_pass, verified_password} = req.body;
+      const {username, old_pass, new_pass, verified_password} = req.body;node 
       if(!username) return res.send(response(false, `Username is required!`));
       if(!old_pass) return res.send(response(false, `Pass verification is required!`));
       if(!new_pass) return res.send(response(false, `New Pass is required`));

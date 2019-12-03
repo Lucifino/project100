@@ -20,7 +20,7 @@ mongoose.connect(`${url}${database}`, server_settings)
     else{
       console.log(`=======================================`)
       console.log(`Landed on Landi-ng!`);
-      console.log(`🐍 Flirting started @ port: ${port}`) 
+      console.log(`🐍 Flirting started @ port: ${host}:${port}`) 
       console.log(`=======================================`)
     }
   })

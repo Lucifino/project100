@@ -23,14 +23,7 @@ const PERSONAL_INFORMATION = new Schema({
     type: String,
     required: true,
   },
-  friends: [{
-    type: Schema.Types.ObjectId,
-    required: false
-  }],
-  friends_requests: [{
-    type: Schema.Types.ObjectId,
-    required: false
-  }]
+  
 })
 
 module.exports = PERSONAL_INFORMATION;
