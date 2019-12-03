@@ -138,19 +138,31 @@ module.exports = {
     },
 
     updateUserPassword: (req,res) => {
-      const {username, old_pass, new_pass, verified_password} = req.body;node 
+      const {username} = req.POST_VERIFICATION;
+      const {old_password, new_password, verified_password} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
-      if(!old_pass) return res.send(response(false, `Pass verification is required!`));
-      if(!new_pass) return res.send(response(false, `New Pass is required`));
-      if(new_pass !== verified_password) return res.send(response(false, `Passwords do not match`));
+      if(!old_password) return res.send(response(false, `Old password is required!`));
+      if(!new_password) return res.send(response(false, `New Pass is required`));
+      if(!verified_password) return res.send(response(false, `New Pass is required`));
+      if(new_password !== verified_password) return res.send(response(false, `Passwords do not match`));
+
 
       return USER.findOne({username})
       .then(user => {
         if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.findByIdAndUpdate(user._id, {password: new_pass}, {new: true})
-        .then(result => {
-          if(!result) return res.send(response(false, `Update Error!`));
-          return res.send(response(true, `Succesfully updated password`))
+        if(old_password == new_password) return res.send(response(false, `New password cannot be the same as old password`));
+        return bcrypt.compare(old_password, user.password, (err, result) => {
+          console.log(result);
+          if(result){
+            return bcrypt.hash(new_password, salt_rounds, (err, hash) => {
+              return user.updateOne({password: hash})
+              .then(() => {
+                return res.send(response(true, `Succesfully changed password`))
+              })
+            })
+          }else{
+            return res.send(response(false, `Old password incorrect!`))
+          }
         })
       })
     },

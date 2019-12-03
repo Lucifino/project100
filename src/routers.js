@@ -20,8 +20,8 @@ router.get('/getAllUsers', verifyToken, USER.queries.getAllUsers);
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
 router.post('/createUser', USER.mutations.createUser);
 router.post('/login', USER.mutations.login);
-router.post('/updatepass', verifyToken, USER.mutations.updateUserPassword)
-router.post('/updateinfo', verifyToken, USER.mutations.updateUserInformation)
+router.post('/updateUserPassword', verifyToken, USER.mutations.updateUserPassword)
+router.post('/updateUserInformation', verifyToken, USER.mutations.updateUserInformation)
 router.post('/processFriendRequest', verifyToken, USER.mutations.processFriendRequest)
 router.post('/deleteFriendRequest', verifyToken, USER.mutations.deleteFriendRequest)
 router.post('/acceptFriendRequest', verifyToken, USER.mutations.acceptFriendRequest)
