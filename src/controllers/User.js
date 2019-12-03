@@ -1,5 +1,8 @@
 const USER = require('../models/entities/User');
 const FRIEND_REQUEST = require('../models/prerequisites/Friend_Requests')
+const POST = require('../models/entities/Post');
+const COMMENT = require('../models/prerequisites/Comment')
+
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -89,22 +92,21 @@ module.exports = {
       })
     },
 
-    deleteFriendRequest: (req,res) => {
-      const {username} = req.body;
+    declineFriendRequest: (req,res) => {
+      const req_del = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
-      const search_id = req.POST_VERIFICATION.user_id
+      const {username} = req.POST_VERIFICATION.username
 
-      return USER.findOne({search_id})
+      return USER.findOne({username})
       .then(user => {
-        if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.findOne({username})
+        if(!user) return res.send(response(false, `User Does Not Exist!`));
+        return USER.findOne({username: req_del})
         .then(user2 => {
-          if(!user2) return res.send((response(false, `User does not exist!`)));
-          if(!user.friend_requests.equals(user2._id)) return res.send((response(false, `Request does not exist!`)));
-          return user.personal_information.friend_requests.pull(user2)
+          if(!user2) return res.send(response(false, `User Does Not Exist!`));
+          return user.updateOne({ $pull : {friend_requests: user2.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
-            return res.send(response(true, `Succesfully Friend Request Deleted!`, result))
+            return res.send(response(true, `Declined request!`, result))
           })
         })
       })
@@ -118,10 +120,10 @@ module.exports = {
       
       return USER.findById(source_id)
       .then(source_user =>{
-        if(!source_user) return res.send(response(false, `Your user doesn't exist`));
+        if(!source_user) return res.send(response(false, `Your user does not exist`));
         return USER.findOne({username})
         .then(user_to_accept => {
-          if(!user_to_accept) return res.send(response(false, `User doesn't exist!`));
+          if(!user_to_accept) return res.send(response(false, `User does not exist!`));
           if(source_user.friend_requests.includes(username)){
             return source_user.updateOne({$pull: {friend_requests: username}, $push: {friends: username}})
             .then(() => {
@@ -136,6 +138,27 @@ module.exports = {
         })
       })
     },
+
+    Unfriend: (req,res) => {
+      const not_friend = req.body;
+      if(!username) return res.send(response(false, `Username is required!`));
+      const {username} = req.POST_VERIFICATION.username
+
+      return USER.findOne({username})
+      .then(user => {
+        if(!user) return res.send(response(false, `User Does Not Exist!`));
+        return USER.findOne({username: not_friend})
+        .then(user2 => {
+          if(!user2) return res.send(response(false, `User Does Not Exist!`));
+          return user.updateOne({ $pull : {friends: user2.username}}, {new: true})
+          .then(result => {
+            if(!result) return res.send(response(false, `Update Error!`));
+            return res.send(response(true, `Declined request!`, result))
+          })
+        })
+      })
+    },
+
 
     updateUserPassword: (req,res) => {
       const {username} = req.POST_VERIFICATION;
@@ -198,9 +221,18 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         return bcrypt.compare(password, user.password, (err, result) => {
           if(!result) return res.send((response(false, `Incorrect password!`)));
-          return USER.deleteOne({username: user.username}, (err, result) =>{
-            if(err) return res.send((response(false, `Delete Error!`, err)));
-            return res.send(response(true, `Succesfully deleted user`));
+          return COMMENT.deleteMany({author : user.username})
+          .then(comment => {
+            if(!comment) return res.send((response(false, `Comments not Deleted!`)));
+            return POST.deleteMany({author : user.username})
+            .then(post => {
+              if(!post) return res.send((response(false, `Posts not Deleted!`)));
+              return USER.deleteOne({username : user.username})
+              .then(result => {
+                if(!result) return res.send((response(false, `Comments not Deleted!`)));
+                return res.send((response(true, `User Deleted!`, result)));
+              })
+            })
           })
         })
       })
