@@ -25,21 +25,6 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         else return res.send((response(true, `Succesfully found user`, user)))
       })
-    },
-    findUserByName: (req, res) => {
-      const input_name = req.body.username;
-
-      return USER.findOne({username : input_name})
-      .then(user => {
-        if(!user) return res.send((response(false, `User does not exist!`)));
-        friend = req.POST_VERIFICATION.username
-        console.log(typeof friend)
-        return USER.findOne({username : input_name, personal_information: { friends: friend } })
-        .then(result =>{
-          if(!result) return res.send((response(false, `User Not Friend!`, user.personal_information)));
-          return res.send((response(true, `User is Friend!`, result)));
-        })
-      })
     }
   },
 
