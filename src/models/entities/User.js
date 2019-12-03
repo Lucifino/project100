@@ -30,11 +30,7 @@ const USER_SCHEMA = new Schema({
   friend_requests: [{
     type: String,
     required: false
-  }],
-  posts: [{
-    type: String,
-    required: false
-  }],
+  }]
 })
 
 const USER = mongoose.model('USER', USER_SCHEMA);

@@ -7,24 +7,8 @@ const {reactions} = require('../utilities/statics');
 
 module.exports = {
   queries: {
-
-    getAllPosts: (req, res) => {
-      //PARAMS
-      const {username} = req.POST_VERIFICATION;
-      console.log(username);
-      return USER.findOne({username})
-      .then(user => {
-        const {friends} = user.friends;
-        return POST.find({$or: [{author: {$in: friends} }, {destination_wall: username}]}).sort({createdAt: -1})
-        .then(posts => {
-          return res.send(response(true, `Sucessfully queried feed`, posts));
-        })
-      })
-    },
-
     getAllPostsFromWall: (req, res) => {
-
-      const destination_wall = req.POST_VERIFICATION.username;
+      const {destination_wall} = req.POST_VERIFICATION.username;
       if(!destination_wall) return res.send(response(false, 'Username is required!'));
       return POST.find({destination_wall}).sort({createdAt: -1})
       .then(result => {
@@ -43,23 +27,26 @@ module.exports = {
       })
     }
   },
-
   mutations: {
 
     createPost: (req, res) => {
-      const author = req.POST_VERIFICATION.username;
-      const {destination_wall, content} = req.body;
+      const {author, destination_wall, content} = req.body;
 
       //@ Validate if user has already the same post
       return USER.findOne({username: destination_wall})
       .then(user => {
-        if(!user) return res.send(response(false, `User does not exist!`));
+        if(user) return res.send(response(false, `User does not exist!`));
         const new_post = new POST({
           author, destination_wall, content
         });
         return new_post.save()
-        .then(result => {
-          return res.send(response(true, `Succesfully created post`, result));
+        .then(post => {
+          if(!post) return res.send((response(false, `Post not Created!`)));
+          return USER.findOneAndUpdate( user._id, { $push: { posts: new_post._id }})
+          .then(result =>{
+            if(!post) return res.send((response(false, `Post not Added!`)));
+            return res.send(response(true, `Succesfully Added Post!`, result))
+          })
         })
       })
     },
@@ -95,54 +82,9 @@ module.exports = {
       })
     },
 
-    commentToPost: (req, res) => {
-
-      const {_id, author, destination, content} = req.body;
-
-      //@ Validate if user has already the same post
-      return POST.findById({_id})
-      .then(post => {
-        if(post) return res.send(response(false, `This POST Already Exists!`));
-        const collection_id = _id
-        //NEW COMMENT
-        const new_comment = new Comment({
-          content, author, destination_wall, collection_id 
-        });
-        //SAVE COMMENT
-        return new_comment.save()
-        .then(comment => {
-          if(!comment) return res.send((response(false, `Comment not Saved`)))
-          return POST.findOneAndUpdate( post._id, { $push: { comments: new_comment._id }})
-          .then(result => {
-           if(!result) return res.send(response(false, `Add Comment Error!`));
-           return res.send(response(true, `Succesfully Added Comment to Post!`, result))
-          })
-        })
-      })
-    },
-
     editPost: (req, res) => {
-      const {_id, author, content_input} = req.body;
-      if(!_id) return res.send(response(false, 'Post verification is required!'));
-      if(!content_input) return res.send(response(false, 'Content is required!'));
-
-      return USER.findOne({ username: author })
-      .then(user =>{
-        if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.findOne({ username: author, personal_information : { posts: _id } })
-        .then(post => {
-          if(!post) return res.send((response(false, `Post does not exist!`)));
-          return POST.findByIdAndUpdate(_id, {content: content_input})
-          .then(result => {
-            if(!result) return res.send((response(false, `Post not updated!`)));
-            return res.send((response(true, `Post not updated!`, result)));
-          })
-        })
-      })
-    },
-
-    editComment: (req, res) => {
-      const {_id, author, content_input} = req.body;
+      const author = req.POST_VERIICATION.username
+      const {_id, content_input} = req.body;
       if(!_id) return res.send(response(false, 'Post verification is required!'));
       if(!content_input) return res.send(response(false, 'Content is required!'));
 
@@ -162,7 +104,16 @@ module.exports = {
     },
 
     deletePost: (req, res) => {
+      const post_id = req.body;
+      if(!_id) return res.send(response(false, `_id is required!`));
 
+      return COMMENT.deleteManay({collection_id: post_id})
+      .then(comment => {
+        if(!comment) return res.send(response(false, `comments not deleted!`));
+        return POST.deleteOne({_id: post_id})
+        .then(result => {
+          if(!result) return res.send(response(false, `Post not deleted!`));
+        })
+      })
     }
-  },
 }

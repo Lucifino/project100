@@ -9,6 +9,7 @@ router.use(bodyParser.json());
 
 const USER = require('./controllers/User');
 const POST = require('./controllers/Post');
+const COMMENT = require('./controllers/Comment')
 
 const secureConection = (req, res, next) => {
   res.send('Connection is clear');
@@ -30,8 +31,16 @@ router.delete('/deleteUser', verifyToken, USER.mutations.deleteUser);
 
 //@ POST FUNCTIONS
 router.get('/getAllPosts', verifyToken, POST.queries.getAllPosts);
-router.get('/getPostsByUserId', verifyToken, POST.queries.getPostsByOwner)
+router.get('/getPostsByUserId', verifyToken, POST.queries.getPostsByUserId)
 router.post('/createPost', verifyToken, POST.mutations.createPost);
 router.post('/reactToPost', verifyToken, POST.mutations.reactToPost);
+router.post('/editPost', verifyToken, POST.mutations.editPost);
+router.delete('deleteComment', verifyToken, POST.mutations.deletePost)
+
+//@ COMMENT FUNCTIONS
+router.get('/getAllCommentsfromPost', verifyToken, COMMENT.queries.getAllCommentsfromPost)
+router.post('/commentToPost', verifyToken, COMMENT.mutations.commentToPost)
+router.post('/editComment', verifyToken, COMMENT.mutations.commentToPost)
+router.delete('deleteComment', verifyToken, COMMENT.mutations.deleteComment)
 
 module.exports = router;
