@@ -108,24 +108,6 @@ module.exports = {
       })
     },
 
-      const {username, personal_information} = req.body;
-      let information = JSON.parse(personal_information);
-      const {first_name, middle_name, last_name, birthday, email_address, about} = information;
-      if(!first_name) return res.send(response(false, 'First name is required!'));
-      if(!last_name) return res.send(response(false, 'Last name is required!'));
-      if(!birthday) return res.send(response(false, 'Birthday is required!'));
-      if(!email_address) return res.send(response(false, 'Email address is required!'));
-
-      return USER.findOne({username})
-      .then(user => {
-        if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.findByIdAndUpdate(user._id, {personal_information: information}, {new:true})
-        .then(result =>{
-          if(!result) return res.send((response(false, `Update Error!`)));
-          return res.send(response(true, `Succesfully updated user`, result.personal_information))
-        })
-      })
-
     editPost: (req, res) => {
       const {_id, author, content_input} = req.body;
       if(!_id) return res.send(response(false, 'Post verification is required!'));
