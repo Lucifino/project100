@@ -63,6 +63,9 @@ module.exports = {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
+      const search_user = req.POST_VERIFICATION.username
+      const _id = req.POST_VERIFICATION.user_id
+
       return USER.findOne({username: req.POST_VERIFICATION.username})
       .then(user => {
         if(!user) return res.send((response(false, `User1 does not exist!`)));
@@ -150,7 +153,11 @@ module.exports = {
           return user.updateOne({ $pull : {friends: user2.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
-            return res.send(response(true, `Declined request!`, result))
+            return user2.updateOne({ $pull : {friends: user.username}}, {new: true})
+            .then(result => {
+              if(!result) return res.send(response(false, `Update Error!`));
+              return res.send(response(true, `Not Friends Anymore!`, result));
+            })
           })
         })
       })
@@ -172,6 +179,7 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         if(old_password == new_password) return res.send(response(false, `New password cannot be the same as old password`));
         return bcrypt.compare(old_password, user.password, (err, result) => {
+          console.log(result);
           if(result){
             return bcrypt.hash(new_password, salt_rounds, (err, hash) => {
               return user.updateOne({password: hash})
@@ -187,8 +195,7 @@ module.exports = {
     },
 
     updateUserInformation: (req,res) => {
-      const {username} = req.POST_VERIFICATION;
-      const {personal_information} = req.body;
+      const {username, personal_information} = req.body;
       let information = JSON.parse(personal_information);
       const {first_name, middle_name, last_name, birthday, email_address} = information;
       if(!first_name) return res.send(response(false, 'First name is required!'));
@@ -224,10 +231,14 @@ module.exports = {
             return POST.deleteMany({author : user.username})
             .then(post => {
               if(!post) return res.send((response(false, `Posts not Deleted!`)));
-              return USER.deleteOne({username : user.username})
+              return USER.updateMany({ $pull : {friends: user.username}}, {new: true})
               .then(result => {
-                if(!result) return res.send((response(false, `Comments not Deleted!`)));
-                return res.send((response(true, `User Deleted!`, result)));
+                if(!result) return res.send((response(false, `Still Friends!`)));
+                return USER.deleteOne({username: user.username})
+                .then(result2 => {
+                  if(!result2) return res.send((response(false, `Delete Error!`)));
+                  return res.send((response(false, `User Deleted!`)));
+                })
               })
             })
           })
