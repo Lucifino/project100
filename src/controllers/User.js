@@ -28,6 +28,22 @@ module.exports = {
     }
   },
 
+  findUserByName: (req, res) => {
+      const input_name = req.body.username;
+
+      return USER.findOne({username : input_name})
+      .then(user => {
+        if(!user) return res.send((response(false, `User does not exist!`)));
+        friend = req.POST_VERIFICATION.username
+        console.log(typeof friend)
+        return USER.findOne({username : input_name, personal_information: { friends: friend } })
+        .then(result =>{
+          if(!result) return res.send((response(false, `User Not Friend!`, user.personal_information)));
+          return res.send((response(true, `User is Friend!`, result)));
+        })
+      })
+    },
+
   mutations: {
     createUser: (req, res) => {
       const {username, password, verified_password, personal_information} = req.body;
@@ -70,7 +86,7 @@ module.exports = {
         .then(user2 => {
           if(!user2) return res.send((response(false, `User2 does not exist!`)));
          // if(user.friend_requests.equals(user2._id)) return res.send((response(false, `User already your Friend!`)));
-          return USER.findByIdAndUpdate(user2._id, { $push: { friend_requests: user._id }})
+          return USER.findOneAndUpdate( user2._id,{ $push: { friend_requests: user._id }})
            .then(result => {
            if(!result) return res.send(response(false, `Update Error!`));
            return res.send(response(true, `Succesfully Friend Request Sent!`, result))
