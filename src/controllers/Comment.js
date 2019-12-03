@@ -15,14 +15,14 @@ module.exports = {
         if(!result) return res.send(response(false, `POST does not exist`));
         else return res.send(response(true, `Succesfully queried comments`, result));
       })
-    },
+    }
+  },
 
   mutations: {
-
     commentToPost: (req, res) => {
 
       const author = req.POST_VERIFICATION.username
-      const {_id, author, destination_wall, content} = req.body;
+      const {_id, destination_wall, content} = req.body;
       if(!_id) return res.send(response(false, '_id is required!'));
       if(!destination_wall) return res.send(response(false, 'Destination is required!'));
       if(!author) return res.send(response(false, 'author is required!'));

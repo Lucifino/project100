@@ -60,9 +60,6 @@ module.exports = {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
-      const search_user = req.POST_VERIFICATION.username
-      const _id = req.POST_VERIFICATION.user_id
-
       return USER.findOne({username: req.POST_VERIFICATION.username})
       .then(user => {
         if(!user) return res.send((response(false, `User1 does not exist!`)));
@@ -152,7 +149,6 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         if(old_password == new_password) return res.send(response(false, `New password cannot be the same as old password`));
         return bcrypt.compare(old_password, user.password, (err, result) => {
-          console.log(result);
           if(result){
             return bcrypt.hash(new_password, salt_rounds, (err, hash) => {
               return user.updateOne({password: hash})
@@ -168,7 +164,8 @@ module.exports = {
     },
 
     updateUserInformation: (req,res) => {
-      const {username, personal_information} = req.body;
+      const {username} = req.POST_VERIFICATION;
+      const {personal_information} = req.body;
       let information = JSON.parse(personal_information);
       const {first_name, middle_name, last_name, birthday, email_address} = information;
       if(!first_name) return res.send(response(false, 'First name is required!'));
