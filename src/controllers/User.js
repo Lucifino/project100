@@ -12,10 +12,6 @@ const {response} = require('../utilities/helpers');
 module.exports = {
   queries: {
     getAllUsers: (req, res) => {
-
-
-      console.log(req.POST_VERIFICATION)
-
       return USER.find()
       .then(users => {
         return res.send(response(true, `Successfully queried users`, users))
@@ -24,7 +20,6 @@ module.exports = {
 
     getUserById: (req, res) => {
       const {user_id} = req.body;
-
       return USER.findById(user_id)
       .then(user => {
         if(!user) return res.send((response(false, `User does not exist!`)));
@@ -65,11 +60,8 @@ module.exports = {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
-      console.log(username)
       const search_user = req.POST_VERIFICATION.username
       const _id = req.POST_VERIFICATION.user_id
-      console.log(_id)
-      console.log(search_user)
 
       return USER.findOne({username: req.POST_VERIFICATION.username})
       .then(user => {
@@ -138,7 +130,6 @@ module.exports = {
       if(!old_pass) return res.send(response(false, `Pass verification is required!`));
       if(!new_pass) return res.send(response(false, `New Pass is required`));
       if(new_pass !== verified_password) return res.send(response(false, `Passwords do not match`));
-      console.log(new_pass)
 
       return USER.findOne({username})
       .then(user => {
@@ -146,24 +137,19 @@ module.exports = {
         return USER.findByIdAndUpdate(user._id, {password: new_pass}, {new: true})
         .then(result => {
           if(!result) return res.send(response(false, `Update Error!`));
-          return res.send(response(true, `Succesfully updated password`, result.password))
+          return res.send(response(true, `Succesfully updated password`))
         })
       })
     },
 
     updateUserInformation: (req,res) => {
       const {username, personal_information} = req.body;
-      console.log("ehy");
       let information = JSON.parse(personal_information);
       const {first_name, middle_name, last_name, birthday, email_address} = information;
       if(!first_name) return res.send(response(false, 'First name is required!'));
       if(!last_name) return res.send(response(false, 'Last name is required!'));
       if(!birthday) return res.send(response(false, 'Birthday is required!'));
       if(!email_address) return res.send(response(false, 'Email address is required!'));
-
-      console.log(username)
-      console.log(information)
-
 
       return USER.findOne({username})
       .then(user => {
@@ -184,18 +170,15 @@ module.exports = {
 
       return USER.findOne({username})
       .then(user => {
-        // return POST.deleteMany({user_id: user._id})
-        // .then(result => {
-        //   return POST.find()
-
-        // })
         if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.deleteOne({username: user.username}, (err, res) =>{
-          if(err) return res.send((response(false, `Delete Error!`, err)));
-          return res.send(response(true, `Succesfully deleted user`));
+        return bcrypt.compare(password, user.password, (err, result) => {
+          if(!result) return res.send((response(false, `Incorrect password!`)));
+          return USER.deleteOne({username: user.username}, (err, result) =>{
+            if(err) return res.send((response(false, `Delete Error!`, err)));
+            return res.send(response(true, `Succesfully deleted user`));
+          })
         })
       })
-
     },
 
     login: (req, res) => {
@@ -212,7 +195,6 @@ module.exports = {
 
       return USER.findOne({username})
       .then(user => {
-        console.log(user)
         if(!user) return res.send((response(false, `Account Missing!`)));
         return bcrypt.compare(password, user.password, (err, result) => {
           if(!result) return res.send((response(false, `Incorrect login!`)));
