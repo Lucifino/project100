@@ -1,6 +1,6 @@
 const POST = require('../models/entities/Post');
 const USER = require('../models/entities/User');
-const COMMENT = require('../models/prerequisites/Comment')
+const COMMENT = require('../models/entities/Comment')
 
 const {response} = require('../utilities/helpers');
 const {reactions} = require('../utilities/statics');
@@ -20,27 +20,23 @@ module.exports = {
 
   mutations: {
     commentToPost: (req, res) => {
-
       const author = req.POST_VERIFICATION.username
-      const {_id, destination_wall, content} = req.body;
-      if(!_id) return res.send(response(false, '_id is required!'));
-      if(!destination_wall) return res.send(response(false, 'Destination is required!'));
-      if(!author) return res.send(response(false, 'author is required!'));
+      const {post_id, content} = req.body;
+      if(!post_id) return res.send(response(false, 'post_id is required!'));
+      if(!content) return res.send(response(false, 'content is required!'));
       //@ Validate if user has already the same post
-      return POST.findById({_id})
+      return POST.findById(post_id)
       .then(post => {
-        if(post) return res.send(response(false, `This POST Already Exists!`));
-        const collection_id = _id
+        if(!post) return res.send(response(false, `This post doesn't exist!`));
         //NEW COMMENT
-        const new_comment = new Comment({
-          content, author, destination_wall, collection_id 
+        const new_comment = new COMMENT({
+          content, author, post_id 
         });
         //SAVE COMMENT
         return new_comment.save()
         .then(result => {
-          if(!result) return res.send((response(false, `Comment not Saved`)))
-          return res.send((response(true, `Comment Saved`, result)))
-
+          if(!result) return res.send((response(false, `Comment not saved`)))
+          return res.send((response(true, `Succesfully added comment`, result)))
         })
       })
     },

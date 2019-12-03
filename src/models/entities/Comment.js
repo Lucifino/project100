@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const COMMENT_SCHEMA = new Schema({
-  _id: false,
   content: {
     type: String,
     default: 'LIKE',
@@ -12,15 +11,12 @@ const COMMENT_SCHEMA = new Schema({
     type: String,
     required: true,
   },
-  destination_wall: {
-    type: String,
-    required: true,
-  },
-  collection_id: {
+  post_id: {
     type: Schema.Types.ObjectId,
-    ref: 'USER',
+    ref: 'POST',
     required: true,
   }
 })
 
-module.exports = COMMENT_SCHEMA;
+const COMMENT = mongoose.model('COMMENT', COMMENT_SCHEMA);
+module.exports = COMMENT;
