@@ -19,12 +19,12 @@ router.get('/getAllUsers', verifyToken, USER.queries.getAllUsers);
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
 router.post('/createUser', USER.mutations.createUser);
 router.post('/login', USER.mutations.login);
-router.put('/updatepass', verifyToken, USER.mutations.updateUserPassword)
-router.put('/updateinfo', verifyToken, USER.mutations.updateUserInformation)
-router.put('/sendrequest', verifyToken, USER.mutations.sendFriendRequest)
-router.put('/deleterequest', verifyToken, USER.mutations.deleteFriendRequest)
-router.put('/acceptrequest', verifyToken, USER.mutations.acceptFriendRequest)
-router.delete('/delete', verifyToken, USER.mutations.deleteUser);
+router.post('/updatepass', verifyToken, USER.mutations.updateUserPassword)
+router.post('/updateinfo', verifyToken, USER.mutations.updateUserInformation)
+router.post('/sendFriendRequest', verifyToken, USER.mutations.sendFriendRequest)
+router.post('/deleteFriendRequest', verifyToken, USER.mutations.deleteFriendRequest)
+router.post('/acceptFriendRequest', verifyToken, USER.mutations.acceptFriendRequest)
+router.delete('/deleteUser', verifyToken, USER.mutations.deleteUser);
 
 
 //@ POST FUNCTIONS
