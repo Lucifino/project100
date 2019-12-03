@@ -136,7 +136,7 @@ module.exports = {
       })
     },
 
-    Unfriend: (req,res) => {
+    unfriend: (req,res) => {
       const not_friend = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
       const {username} = req.POST_VERIFICATION.username

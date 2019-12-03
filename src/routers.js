@@ -24,7 +24,7 @@ router.post('/login', USER.mutations.login);
 router.post('/updateUserPassword', verifyToken, USER.mutations.updateUserPassword)
 router.post('/updateUserInformation', verifyToken, USER.mutations.updateUserInformation)
 router.post('/processFriendRequest', verifyToken, USER.mutations.processFriendRequest)
-router.post('/deleteFriendRequest', verifyToken, USER.mutations.deleteFriendRequest)
+router.post('/declineFriendRequest', verifyToken, USER.mutations.declineFriendRequest)
 router.post('/acceptFriendRequest', verifyToken, USER.mutations.acceptFriendRequest)
 router.delete('/deleteUser', verifyToken, USER.mutations.deleteUser);
 

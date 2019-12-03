@@ -105,21 +105,25 @@ module.exports = {
 
     editPost: (req, res) => {
       const author = req.POST_VERIFICATION.username
-      const {_id, content_input} = req.body;
-      if(!_id) return res.send(response(false, 'Post verification is required!'));
-      if(!content_input) return res.send(response(false, 'Content is required!'));
+      const {post_id, content} = req.body;
+      if(!post_id) return res.send(response(false, 'Post verification is required!'));
+      if(!content) return res.send(response(false, 'Content is required!'));
 
       return USER.findOne({ username: author })
       .then(user =>{
-        if(!user) return res.send((response(false, `User does not exist!`)));
-        return USER.findOne({ username: author, personal_information : { posts: _id } })
+        if(!user) return res.send(response(false, `User doesn't exist!`));
+        return POST.findById(post_id)
         .then(post => {
-          if(!post) return res.send((response(false, `Post does not exist!`)));
-          return POST.findByIdAndUpdate(_id, {content: content_input})
-          .then(result => {
-            if(!result) return res.send((response(false, `Post not updated!`)));
-            return res.send((response(true, `Post not updated!`, result)));
-          })
+          if(post.author != author) return res.send(response(false, `Cannot edit other user's post!`)); 
+          if(!post) return res.send(response(false, `Post doesn't exist!`));
+          if(post.content == content){
+            return res.send(response(false, `Edited content same as old!`));
+          }else{
+            return post.updateOne({content})
+            .then(result => {
+              return res.send(response(true, `Post successfully edited!`, result));
+            })
+          }
         })
       })
     },
