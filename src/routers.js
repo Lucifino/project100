@@ -30,8 +30,7 @@ router.delete('/deleteUser', verifyToken, USER.mutations.deleteUser);
 
 //@ POST FUNCTIONS
 router.get('/getAllPosts', verifyToken, POST.queries.getAllPosts);
-router.get('/getPostsByUserId', verifyToken
-, POST.queries.getPostsByUserId)
+router.get('/getPostsByUserId', verifyToken, POST.queries.getPostsByUserId)
 router.post('/createPost', verifyToken, POST.mutations.createPost);
 router.post('/reactToPost', verifyToken, POST.mutations.reactToPost);
 
