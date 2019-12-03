@@ -24,13 +24,17 @@ const USER_SCHEMA = new Schema({
     default: false,
   },
   friends: [{
-    type: Schema.Types.ObjectId,
+    type: String,
     required: false
   }],
   friend_requests: [{
-    type: Schema.Types.ObjectId,
+    type: String,
     required: false
-  }]
+  }],
+  posts: [{
+    type: String,
+    required: false
+  }],
 })
 
 const USER = mongoose.model('USER', USER_SCHEMA);

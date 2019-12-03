@@ -8,7 +8,15 @@ const COMMENT_SCHEMA = new Schema({
     default: 'LIKE',
     required: true,
   },
-  user_id: {
+  author: {
+    type: String,
+    required: true,
+  },
+  destination_wall: {
+    type: String,
+    required: true,
+  },
+  collection_id: {
     type: Schema.Types.ObjectId,
     ref: 'USER',
     required: true,
