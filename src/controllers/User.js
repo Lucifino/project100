@@ -25,10 +25,8 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         else return res.send((response(true, `Succesfully found user`, user)))
       })
-    }
-  },
-
-  findUserByName: (req, res) => {
+    },
+    findUserByName: (req, res) => {
       const input_name = req.body.username;
 
       return USER.findOne({username : input_name})
@@ -42,7 +40,8 @@ module.exports = {
           return res.send((response(true, `User is Friend!`, result)));
         })
       })
-    },
+    }
+  },
 
   mutations: {
     createUser: (req, res) => {
