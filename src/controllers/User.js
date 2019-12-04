@@ -316,7 +316,7 @@ module.exports = {
             return USER.findByIdAndUpdate(user._id, {is_logged_in : true})
             .then(result2 =>{
               if(!result) return res.send(response(false, `login error!`))
-              return res.send(response(true, `Successfuly Logged In!`, result))
+              return res.send(response(true, `Successfuly Logged In!`, token))
             })
           })
         })

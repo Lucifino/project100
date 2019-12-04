@@ -24,12 +24,10 @@ module.exports = {
 
   mutations: {
     commentToPost: (req, res) => {
-
       const author = req.POST_VERIFICATION.username
-      const {post_id, destination_wall, content} = req.body;
+      const {post_id, content} = req.body;
       if(!post_id) return res.send(response(false, '_id is required!'));
       if(!author) return res.send(response(false, 'author is required!'));
-      if(!destination_wall) return res.send(response(false, 'destination wall is required'));
       if(!content) return res.send(response(false, 'content is required!'));
       //@ Validate if user has already the same post
       return POST.findById(post_id)
@@ -37,7 +35,7 @@ module.exports = {
         if(!post) return res.send(response(false, `This Post Does Not Exists!`));
         //NEW COMMENT
         const new_comment = new COMMENT({
-          content, author, destination_wall, post_id
+          content, author, post_id
         });
         //SAVE COMMENT
         return new_comment.save()
@@ -71,23 +69,30 @@ module.exports = {
       })
     },
 
-    deleteComment: (req, res) => {
+    deleteComment: async (req, res) => {
       const {comment_id} = req.body;
       if(!comment_id) return res.send(response(false, `Comment_id is required!`));
-      const match_name = req.POST_VERIFICATION.username
+      const {username} = req.POST_VERIFICATION
 
-      console.log(comment_id)
+      comment = await COMMENT.findById(comment_id);
+      post = await POST.findById(comment.post_id);
 
-      return COMMENT.findById(comment_id)
-      .then(comment => {
-        if(!comment) return res.send(response(false, `Comment not Found!`));
-        if(comment.author !== match_name || comment.destination_wall !== match_name) return res.send(response(false, `Cannot Del Other Users Comments`));
-        return COMMENT.findByIdAndDelete(comment_id)
-        .then(result =>{
-          if(!result) return res.send(response(false, `Comment not Deleted!`));
-          return res.send(response(true, `Comment Deleted!`));
+      if(!comment) return res.send(response(false, `Comment doesn't  exist`));
+
+      //If comment is made on your wall, you can delete it
+      if(username == post.author){
+        return COMMENT.findByIdAndDelete(comment_id).then(() => {
+          return res.send(response(true, `Comment deleted!`));
         })
-      })
+      }else{
+        if(username == comment.author){
+          return COMMENT.findByIdAndDelete(comment_id).then(() => {
+            return res.send(response(true, `Comment deleted!`));
+          })
+        }else{
+          return res.send(response(true, `Comment delete others\' comments in unowned posts!`));
+        }
+      }
     }
   }
 }
