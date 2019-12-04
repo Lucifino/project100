@@ -17,6 +17,7 @@ const secureConection = (req, res, next) => {
 
 //@ USER FUCTIONS
 router.get('/', secureConection);
+router.get('/userSearchBy', verifyToken, USER.queries.userSearchBy)
 router.get('/getAllUsers', verifyToken, USER.queries.getAllUsers);
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
 router.post('/createUser', USER.mutations.createUser);
@@ -26,6 +27,7 @@ router.post('/updateUserInformation', verifyToken, USER.mutations.updateUserInfo
 router.post('/processFriendRequest', verifyToken, USER.mutations.processFriendRequest)
 router.post('/declineFriendRequest', verifyToken, USER.mutations.declineFriendRequest)
 router.post('/acceptFriendRequest', verifyToken, USER.mutations.acceptFriendRequest)
+router.post('/unFriend', verifyToken, USER.mutations.unFriend)
 router.delete('/deleteUser', verifyToken, USER.mutations.deleteUser);
 
 
@@ -35,12 +37,12 @@ router.get('/getPostsByOwner', verifyToken, POST.queries.getPostsByOwner)
 router.post('/createPost', verifyToken, POST.mutations.createPost);
 router.post('/reactToPost', verifyToken, POST.mutations.reactToPost);
 router.post('/editPost', verifyToken, POST.mutations.editPost);
-router.delete('deleteComment', verifyToken, POST.mutations.deletePost)
+router.delete('/deletePost', verifyToken, POST.mutations.deletePost)
 
 //@ COMMENT FUNCTIONS
 router.get('/getAllCommentsfromPost', verifyToken, COMMENT.queries.getAllCommentsfromPost)
 router.post('/commentToPost', verifyToken, COMMENT.mutations.commentToPost)
-router.post('/editComment', verifyToken, COMMENT.mutations.commentToPost)
-router.delete('deleteComment', verifyToken, COMMENT.mutations.deleteComment)
+router.post('/editComment', verifyToken, COMMENT.mutations.editComment)
+router.delete('/deleteComment', verifyToken, COMMENT.mutations.deleteComment)
 
 module.exports = router;

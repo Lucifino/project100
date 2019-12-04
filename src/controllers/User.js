@@ -1,7 +1,7 @@
 const USER = require('../models/entities/User');
 const FRIEND_REQUEST = require('../models/prerequisites/Friend_Requests')
 const POST = require('../models/entities/Post');
-const COMMENT = require('../models/prerequisites/Comment')
+const COMMENT = require('../models/entities/Comment')
 
 
 const bcrypt = require('bcryptjs');
@@ -14,10 +14,49 @@ const {response} = require('../utilities/helpers');
 
 module.exports = {
   queries: {
-    getAllUsers: (req, res) => {
-      return USER.find()
+    userSearchBy: (req, res) => {
+
+      const {search_field, search_value} = req.body
+      const queryObj = {}
+
+      if(search_field !== '' && search_value !== ''){
+        queryObj[search_field] = search_value;
+      }
+
+      console.log(queryObj)
+
+      return USER.find({personal_information : {search_field : {$regex: search_value}}}).sort({createdAt: -1})
       .then(users => {
         return res.send(response(true, `Successfully queried users`, users))
+      })
+    },
+
+    getAllUsers: (req, res) => {
+      return USER.find().sort({createdAt: -1})
+      .then(users => {
+        return res.send(response(true, `Successfully queried users`, users))
+      })
+    },
+
+    getFriends: (req, res) => {
+      const {your_id} = req.POST_VERIFICATION.user_id
+
+      return USER.findById(your_id)
+      .then(user => {
+        if(!user) return res.send(response(false, `user does not exist!`))
+        return res.send(response(true, `Successfully queried users`, user.friends))
+      })
+    },
+
+    getFriend: (req, res) => {
+      const {friend_name} = req.body
+      const {your_id} = req.POST_VERIFICATION.user_id
+
+      return USER.findById(your_id)
+      .then(user => {
+        if(!user) return res.send(response(false, `user does not exist!`))
+        if(!user.friends.includes(friend_name)) return res.send(response(false, `usernot your friend!`))
+        return res.send(response(true, `Successfully queried users`, friend_name))
       })
     },
 
@@ -63,15 +102,12 @@ module.exports = {
       const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
 
-      const search_user = req.POST_VERIFICATION.username
-      const _id = req.POST_VERIFICATION.user_id
-
       return USER.findOne({username: req.POST_VERIFICATION.username})
       .then(user => {
-        if(!user) return res.send((response(false, `User1 does not exist!`)));
+        if(!user) return res.send((response(false, `User does not exist!`)));
         return USER.findOne({username})
         .then(user2 => {
-          if(!user2) return res.send((response(false, `User2 does not exist!`)));
+          if(!user2) return res.send((response(false, `User does not exist!`)));
 
           //IF USER EXISTS ALREADY, PULL IT FROM THE ARRAY
           if(user2.friend_requests.includes(user.username)){
@@ -93,17 +129,18 @@ module.exports = {
     },
 
     declineFriendRequest: (req,res) => {
-      const req_del = req.body;
+      const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
-      const {username} = req.POST_VERIFICATION.username
+      const source_id = req.POST_VERIFICATION.user_id
 
-      return USER.findOne({username})
-      .then(user => {
-        if(!user) return res.send(response(false, `User Does Not Exist!`));
-        return USER.findOne({username: req_del})
-        .then(user2 => {
-          if(!user2) return res.send(response(false, `User Does Not Exist!`));
-          return user.updateOne({ $pull : {friend_requests: user2.username}}, {new: true})
+      return USER.findById(source_id)
+      .then(user_will_decline => {
+        if(!user_will_decline) return res.send(response(false, `User Does Not Exist!`));
+        return USER.findOne({username})
+        .then(user_declined => {
+          if(!user_declined) return res.send(response(false, `User Does Not Exist!`));
+          if(!user_will_decline.friend_requests.includes(username)) return res.send(response(false, `No Such Request Exists!`));
+          return user_will_decline.updateOne({ $pull : {friend_requests: user_declined.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
             return res.send(response(true, `Declined request!`, result))
@@ -116,6 +153,7 @@ module.exports = {
       const {username} = req.body;
       const source_id = req.POST_VERIFICATION.user_id;
 
+      console.log(username)
       if(!username) return res.send(response(false, `Username is required!`));
       
       return USER.findById(source_id)
@@ -139,17 +177,20 @@ module.exports = {
       })
     },
 
-    unfriend: (req,res) => {
-      const not_friend = req.body;
+    unFriend: (req,res) => {
+      const {username} = req.body;
       if(!username) return res.send(response(false, `Username is required!`));
-      const {username} = req.POST_VERIFICATION.username
+      const source_id = req.POST_VERIFICATION.user_id;
 
-      return USER.findOne({username})
+      console.log(username)
+      console.log(source_id)
+      return USER.findById(source_id)
       .then(user => {
         if(!user) return res.send(response(false, `User Does Not Exist!`));
-        return USER.findOne({username: not_friend})
+        return USER.findOne({username})
         .then(user2 => {
-          if(!user2) return res.send(response(false, `User Does Not Exist!`));
+          if(!user2) return res.send(response(false, `User2 Does Not Exist!`));
+          if(!user.includes(username)) return res.send(response(false, `No Friend Exists!`));
           return user.updateOne({ $pull : {friends: user2.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
@@ -179,7 +220,6 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         if(old_password == new_password) return res.send(response(false, `New password cannot be the same as old password`));
         return bcrypt.compare(old_password, user.password, (err, result) => {
-          console.log(result);
           if(result){
             return bcrypt.hash(new_password, salt_rounds, (err, hash) => {
               return user.updateOne({password: hash})
@@ -220,6 +260,8 @@ module.exports = {
       if(!password) return res.send(response(false, `Pass is required`));
       if(password !== verified_password) return res.send(response(false, `Passwords do not match`));
 
+      const {d_user_id} = req.POST_VERIFICATION.user_id
+
       return USER.findOne({username})
       .then(user => {
         if(!user) return res.send((response(false, `User does not exist!`)));
@@ -231,13 +273,17 @@ module.exports = {
             return POST.deleteMany({author : user.username})
             .then(post => {
               if(!post) return res.send((response(false, `Posts not Deleted!`)));
-              return USER.updateMany({ $pull : {friends: user.username}}, {new: true})
-              .then(result => {
-                if(!result) return res.send((response(false, `Still Friends!`)));
-                return USER.deleteOne({username: user.username})
-                .then(result2 => {
-                  if(!result2) return res.send((response(false, `Delete Error!`)));
-                  return res.send((response(false, `User Deleted!`)));
+              return POST.deleteMany({destination_wall : user.username})
+              .then(post2 => {
+                if(!post2) return res.send((response(false, `Posts not Deleted!`)));
+                return USER.updateMany({ $pull : {friends: user.username}}, {new: true})
+                .then(result => {
+                  if(!result) return res.send((response(false, `Still Friends!`)));
+                  return USER.findByIdAndDelete(d_user_id)
+                  .then(result2 => {
+                    if(!result2) return res.send((response(false, `Delete Error!`)));
+                    return res.send((response(false, `User Deleted!`)));
+                  })
                 })
               })
             })
@@ -267,8 +313,33 @@ module.exports = {
           return jwt.sign({ user_id: user._id, personal_information: information, username: username, is_logged_in: true }, SECRET_KEY, (err, token) => {
             if(err) return res.send((response(false, `Unkown Error!`)))
             online_id = user._id
-            return res.send((response(true, `Succesfully Logged In`, token)))
+            return USER.findByIdAndUpdate(user._id, {is_logged_in : true})
+            .then(result2 =>{
+              if(!result) return res.send(response(false, `login error!`))
+              return res.send(response(true, `Successfuly Logged In!`, result))
+            })
           })
+        })
+      })
+    },
+
+    logout: (req, res) => {
+      //@ Validate existence of username, and password in the paramaters
+      //@ Query user using input username
+      //@ If username doesn't exist, return error
+      //@ Else cross-reference input password with db password using bcrypt compare
+      //@ If match, update user field is_logged_in, then return token
+      //@ Else return error
+      const {user_id} = req.POST_VERIICATION.user_id
+
+      return USER.findById(user_id)
+      .then(user => {
+        if(!user) return res.send(response(false, `User Does Not Exist!`));
+        return USER.findByIdAndUpdate(user_id, {is_logged_in : false}, {new : true})
+        .then(result => {
+          if(!result) return res.send(response(false, `Error Logging Out!`));
+          req.POST_VERIFICATION = null
+          return res.send(response(true, `Successfully Logged Out!`));
         })
       })
     }

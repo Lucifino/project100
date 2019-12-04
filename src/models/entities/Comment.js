@@ -11,9 +11,13 @@ const COMMENT_SCHEMA = new Schema({
     type: String,
     required: true,
   },
+  destination_wall: {
+    type: String,
+    required: true,
+  },
   post_id: {
     type: Schema.Types.ObjectId,
-    ref: 'POST',
+    ref: 'USER',
     required: true,
   }
 })

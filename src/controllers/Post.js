@@ -1,6 +1,6 @@
 const POST = require('../models/entities/Post');
 const USER = require('../models/entities/User');
-const COMMENT = require('../models/prerequisites/Comment')
+const COMMENT = require('../models/entities/Comment')
 
 const {response} = require('../utilities/helpers');
 const {reactions} = require('../utilities/statics');
@@ -111,11 +111,11 @@ module.exports = {
 
       return USER.findOne({ username: author })
       .then(user =>{
-        if(!user) return res.send(response(false, `User doesn't exist!`));
+        if(!user) return res.send(response(false, `User doesnt exist!`));
         return POST.findById(post_id)
         .then(post => {
-          if(post.author != author) return res.send(response(false, `Cannot edit other user's post!`)); 
-          if(!post) return res.send(response(false, `Post doesn't exist!`));
+          if(post.author != author) return res.send(response(false, `Cannot edit other users post!`)); 
+          if(!post) return res.send(response(false, `Post doesnt exist!`));
           if(post.content == content){
             return res.send(response(false, `Edited content same as old!`));
           }else{
@@ -129,15 +129,20 @@ module.exports = {
     },
 
     deletePost: (req, res) => {
-      const post_id = req.body;
-      if(!_id) return res.send(response(false, `_id is required!`));
+      const {d_post_id} = req.body;
+      if(!d_post_id) return res.send(response(false, `_id is required!`));
+      const match_name = req.POST_VERIICAITON.username
 
-      return COMMENT.deleteManay({collection_id: post_id})
-      .then(comment => {
-        if(!comment) return res.send(response(false, `comments not deleted!`));
-        return POST.deleteOne({_id: post_id})
+      console.log("hey")
+      return POST.findByIdAndDelete(d_post_id)
+      .then(post => {
+        console.log("hey")
+        if(post.author !== match_name || post.destination_wall != match_name) return res.send(response(false, `Do not have the priveleges to del!`));
+        if(!post) return res.send(response(false, `Post not deleted!`));
+        return COMMENT.deleteMany({post_id: d_post_id})
         .then(result => {
-          if(!result) return res.send(response(false, `Post not deleted!`));
+          if(!result) return res.send(response(false, `Comments not deleted!`));
+          return res.send(response(true, `Post and Comments deleted!`, result))
         })
       })
     }
