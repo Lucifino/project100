@@ -15,6 +15,9 @@ const COMMENT_SCHEMA = new Schema({
     ref: 'POST',
     required: true,
   }
+},
+{
+  timestamps: true
 })
 
 const COMMENT = mongoose.model('COMMENT', COMMENT_SCHEMA);

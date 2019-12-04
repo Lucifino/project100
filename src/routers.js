@@ -17,8 +17,7 @@ const secureConection = (req, res, next) => {
 
 //@ USER FUCTIONS
 router.get('/', secureConection);
-router.get('/userSearchBy', verifyToken, USER.queries.userSearchBy)
-router.get('/getAllUsers', verifyToken, USER.queries.getAllUsers);
+router.get('/getUsers', verifyToken, USER.queries.getUsers)
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
 router.post('/createUser', USER.mutations.createUser);
 router.post('/login', USER.mutations.login);

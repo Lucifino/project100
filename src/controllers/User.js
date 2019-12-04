@@ -14,29 +14,42 @@ const {response} = require('../utilities/helpers');
 
 module.exports = {
   queries: {
-    userSearchBy: (req, res) => {
+    getUsers: (req, res) => {
 
-      const {search_field, search_value} = req.body
-      const queryObj = {}
+      let {search_field, search_value, sort_field, sort_value}  = req.body
+      const params = [-1, 1];
+      search_value = search_value || "";
+      sort_field = sort_field || 'username';
+      sort_value = parseInt(sort_value) || -1;
 
-      if(search_field !== '' && search_value !== ''){
-        queryObj[search_field] = search_value;
-      }
+      if(!params.includes(sort_value)) return res.send(response(false, `Sort value must only be 1 or -1`));
+      const sort_config = {};
+      sort_config[sort_field] = sort_value;
 
-      console.log(queryObj)
-
-      return USER.find({personal_information : {search_field : {$regex: search_value}}}).sort({createdAt: -1})
+      return USER.find().sort(sort_config)
       .then(users => {
-        return res.send(response(true, `Successfully queried users`, users))
+        return users.filter(user => {
+          if(user.username.includes(search_value) ||
+            user.personal_information.first_name.includes(search_value) ||
+            user.personal_information.middle_name.includes(search_value) ||
+            user.personal_information.last_name.includes(search_value) ||
+            user.personal_information.email_address.includes(search_value)) {
+            return user;
+          }
+        });
       })
+      .then(result => {
+        return res.send(response(true, `Succesfully queried users`, result))
+      })
+
     },
 
-    getAllUsers: (req, res) => {
-      return USER.find().sort({createdAt: -1})
-      .then(users => {
-        return res.send(response(true, `Successfully queried users`, users))
-      })
-    },
+    // getAllUsers: (req, res) => {
+    //   return USER.find().sort({createdAt: -1})
+    //   .then(users => {
+    //     return res.send(response(true, `Successfully queried users`, users))
+    //   })
+    // },
 
     getFriends: (req, res) => {
       const {your_id} = req.POST_VERIFICATION.user_id
@@ -130,20 +143,20 @@ module.exports = {
 
     declineFriendRequest: (req,res) => {
       const {username} = req.body;
-      if(!username) return res.send(response(false, `Username is required!`));
+      if(!username) return res.send(response(false, `username is required!`));
       const source_id = req.POST_VERIFICATION.user_id
 
       return USER.findById(source_id)
       .then(user_will_decline => {
-        if(!user_will_decline) return res.send(response(false, `User Does Not Exist!`));
+        if(!user_will_decline) return res.send(response(false, `User does not exist!`));
         return USER.findOne({username})
         .then(user_declined => {
-          if(!user_declined) return res.send(response(false, `User Does Not Exist!`));
-          if(!user_will_decline.friend_requests.includes(username)) return res.send(response(false, `No Such Request Exists!`));
+          if(!user_declined) return res.send(response(false, `User does not exist!!`));
+          if(!user_will_decline.friend_requests.includes(username)) return res.send(response(false, `No such request exists!`));
           return user_will_decline.updateOne({ $pull : {friend_requests: user_declined.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
-            return res.send(response(true, `Declined request!`, result))
+            return res.send(response(true, `Declined ${username}\'s request!`, result))
           })
         })
       })
@@ -153,7 +166,6 @@ module.exports = {
       const {username} = req.body;
       const source_id = req.POST_VERIFICATION.user_id;
 
-      console.log(username)
       if(!username) return res.send(response(false, `Username is required!`));
       
       return USER.findById(source_id)
@@ -182,22 +194,20 @@ module.exports = {
       if(!username) return res.send(response(false, `Username is required!`));
       const source_id = req.POST_VERIFICATION.user_id;
 
-      console.log(username)
-      console.log(source_id)
       return USER.findById(source_id)
       .then(user => {
-        if(!user) return res.send(response(false, `User Does Not Exist!`));
+        if(!user) return res.send(response(false, `User does not exist!`));
         return USER.findOne({username})
         .then(user2 => {
-          if(!user2) return res.send(response(false, `User2 Does Not Exist!`));
-          if(!user.includes(username)) return res.send(response(false, `No Friend Exists!`));
+          if(!user2) return res.send(response(false, `User does not exist!`));
+          if(!user.friends.includes(username)) return res.send(response(false, `User ${username} is not your friend!`));
           return user.updateOne({ $pull : {friends: user2.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
             return user2.updateOne({ $pull : {friends: user.username}}, {new: true})
             .then(result => {
               if(!result) return res.send(response(false, `Update Error!`));
-              return res.send(response(true, `Not Friends Anymore!`, result));
+              return res.send(response(true, `Succesfully unfriended ${username}`, result));
             })
           })
         })
