@@ -61,14 +61,18 @@ module.exports = {
       return USER.findOne({username: destination_wall})
       .then(user => {
         if(!user) return res.send(response(false, `User does not exist!`));
-        const new_post = new POST({
-          author, destination_wall, content
-        });
-        return new_post.save()
-        .then(post => {
-          if(!post) return res.send((response(false, `Post not Created!`)));
-          return res.send(response(true, `Succesfully created post`, post));
-        })
+        if(user.friends.includes(author) || author === destination_wall){
+          const new_post = new POST({
+            author, destination_wall, content
+          });
+          return new_post.save()
+          .then(post => {
+           if(!post) return res.send((response(false, `Post not Created!`)));
+           return res.send(response(true, `Succesfully created post`, post));
+          })
+        }else{
+          return res.send(response(false, `Can only post on walls of friends!`));
+        }
       })
     },
 
