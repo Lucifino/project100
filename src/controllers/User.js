@@ -75,7 +75,7 @@ module.exports = {
     },
 
     OwnProfile: (req, res) => {
-      const {user_id} = req.POST_VERIFICAITON.user_id;
+      const user_id = req.POST_VERIFICATION.user_id;
       return USER.findById(user_id)
       .then(user => {
         if(!user) return res.send((response(false, `User does not exist!`)));
@@ -84,8 +84,8 @@ module.exports = {
     },
 
     getUserById: (req, res) => {
-      const {user_id} = req.body;
-      return USER.findById(user_id)
+      const {_id} = req.body;
+      return USER.findById(_id)
       .then(user => {
         if(!user) return res.send((response(false, `User does not exist!`)));
         else return res.send((response(true, `Succesfully found user`, user)))
