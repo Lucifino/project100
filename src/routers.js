@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const {verifyToken} = require('./utilities/helpers');
+//const {invalidateToken} = require('./utilities/helpers');
 
 
 router.use(bodyParser.urlencoded({extended: false}));
@@ -17,8 +18,10 @@ const secureConection = (req, res, next) => {
 
 //@ USER FUCTIONS
 router.get('/', secureConection);
+//router.get('/logout', invalidateToken, USER.mutations.logout)
 router.get('/getUsers', verifyToken, USER.queries.getUsers)
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
+router.get('/OwnProfile', verifyToken, USER.queries.OwnProfile)
 router.post('/createUser', USER.mutations.createUser);
 router.post('/login', USER.mutations.login);
 router.post('/updateUserPassword', verifyToken, USER.mutations.updateUserPassword)
