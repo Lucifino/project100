@@ -16,7 +16,7 @@ module.exports = {
   queries: {
     getUsers: (req, res) => {
 
-      let {search_field, search_value, sort_field, sort_value}  = req.body
+      let {search_value, sort_field, sort_value}  = req.body
       const params = [-1, 1];
       search_value = search_value || "";
       sort_field = sort_field || 'username';
@@ -39,6 +39,7 @@ module.exports = {
         });
       })
       .then(result => {
+        if(!result) return res.send(response(false, `Failed to get user field`));
         return res.send(response(true, `Succesfully queried users`, result))
       })
 
@@ -156,7 +157,7 @@ module.exports = {
           return user_will_decline.updateOne({ $pull : {friend_requests: user_declined.username}}, {new: true})
           .then(result => {
             if(!result) return res.send(response(false, `Update Error!`));
-            return res.send(response(true, `Declined ${username}\'s request!`, result))
+            return res.send(response(true, `Declined ${username}s request!`, result))
           })
         })
       })
@@ -277,23 +278,28 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         return bcrypt.compare(password, user.password, (err, result) => {
           if(!result) return res.send((response(false, `Incorrect password!`)));
-          return COMMENT.deleteMany({author : user.username})
-          .then(comment => {
-            if(!comment) return res.send((response(false, `Comments not Deleted!`)));
-            return POST.deleteMany({author : user.username})
-            .then(post => {
-              if(!post) return res.send((response(false, `Posts not Deleted!`)));
-              return POST.deleteMany({destination_wall : user.username})
-              .then(post2 => {
-                if(!post2) return res.send((response(false, `Posts not Deleted!`)));
-                return USER.updateMany({ $pull : {friends: user.username}}, {new: true})
-                .then(result => {
-                  if(!result) return res.send((response(false, `Still Friends!`)));
-                  return USER.findByIdAndDelete(d_user_id)
-                  .then(result2 => {
-                    if(!result2) return res.send((response(false, `Delete Error!`)));
-                    return res.send((response(false, `User Deleted!`)));
-                  })
+          //find all posts on wall and friends wall
+          console.log(user.username)
+          return POST.find({$or: [{author : user.username},{destination_wall : user.username}]})
+          .then(async (post) => {
+            //deletes all comments on user wall and friends wall, as well as friend's comment on posts owned by user and on user wall
+            await Promise.all(post.map(async (post_comment) => {
+              const del_comments = await COMMENT.deleteMany({$or : [{author : user.username},{post_id : post_comment._id}]}) 
+              console.log(del_comments)
+            }));
+            return POST.deleteMany({$or: [{author : user.username},{destination_wall : user.username}]})
+            .then(post_delete => {
+              if(!post_delete) return res.send(response(false, `Posts not deleted!`))
+              return USER.find({friends : user.username})
+              .then(async (unfriend_users) => {
+                await Promise.all(unfriend_users.map(async (unfriend_user) => {
+                  const updated_user_fl = await unfriend_user.updateOne({$pull : {friends : user.username}}) 
+                  console.log(updated_user_fl)
+                }));
+                return USER.deleteOne({username: user.username})
+                .then(user_deleted => {
+                  if(!user_deleted) return res.send(response(false, `User: ${user.username}, not deleted!`))
+                  return res.send(response(true, `Successfully removed ${user.username} account`, user_deleted))
                 })
               })
             })
@@ -334,15 +340,11 @@ module.exports = {
     },
 
     logout: (req, res) => {
-      //@ Validate existence of username, and password in the paramaters
-      //@ Query user using input username
-      //@ If username doesn't exist, return error
-      //@ Else cross-reference input password with db password using bcrypt compare
-      //@ If match, update user field is_logged_in, then return token
-      //@ Else return error
-      const {user_id} = req.POST_VERIICATION.user_id
+      console.log(req.POST_VERIFICATION);
+      console.log(req.POST_VERIFICATION.user_id)
+      const out_id = req.POST_VERIICATION.user_id;
 
-      return USER.findById(user_id)
+      return USER.findById(out_id)
       .then(user => {
         if(!user) return res.send(response(false, `User Does Not Exist!`));
         return USER.findByIdAndUpdate(user_id, {is_logged_in : false}, {new : true})
@@ -353,5 +355,5 @@ module.exports = {
         })
       })
     }
-  },
+  }
 }
