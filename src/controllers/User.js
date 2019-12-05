@@ -74,6 +74,15 @@ module.exports = {
       })
     },
 
+    OwnProfile: (req, res) => {
+      const {user_id} = req.POST_VERIFICAITON.user_id;
+      return USER.findById(user_id)
+      .then(user => {
+        if(!user) return res.send((response(false, `User does not exist!`)));
+        else return res.send((response(true, `Succesfully found user`, user)))
+      })
+    },
+
     getUserById: (req, res) => {
       const {user_id} = req.body;
       return USER.findById(user_id)
@@ -309,12 +318,6 @@ module.exports = {
     },
 
     login: (req, res) => {
-      //@ Validate existence of username, and password in the paramaters
-      //@ Query user using input username
-      //@ If username doesn't exist, return error
-      //@ Else cross-reference input password with db password using bcrypt compare
-      //@ If match, update user field is_logged_in, then return token
-      //@ Else return error
       const {username, password} = req.body
 
       if(!username) return res.send((response(false, `field: username, required!`)));
@@ -326,34 +329,27 @@ module.exports = {
         return bcrypt.compare(password, user.password, (err, result) => {
           if(!result) return res.send((response(false, `Incorrect login!`)));
           information = user.personal_information
-          return jwt.sign({ user_id: user._id, personal_information: information, username: username, is_logged_in: true }, SECRET_KEY, (err, token) => {
+          return jwt.sign({ user_id: user._id, personal_information: information, username: username}, SECRET_KEY, (err, token) => {
             if(err) return res.send((response(false, `Unkown Error!`)))
-            online_id = user._id
-            return USER.findByIdAndUpdate(user._id, {is_logged_in : true})
-            .then(result2 =>{
-              if(!result) return res.send(response(false, `login error!`))
-              return res.send(response(true, `Successfuly Logged In!`, token))
-            })
+            return res.send(response(true, `Successfuly Logged In!`, token))
           })
         })
       })
     },
-
     logout: (req, res) => {
       console.log(req.POST_VERIFICATION);
-      console.log(req.POST_VERIFICATION.user_id)
-      const out_id = req.POST_VERIICATION.user_id;
-
-      return USER.findById(out_id)
-      .then(user => {
-        if(!user) return res.send(response(false, `User Does Not Exist!`));
-        return USER.findByIdAndUpdate(user_id, {is_logged_in : false}, {new : true})
-        .then(result => {
-          if(!result) return res.send(response(false, `Error Logging Out!`));
-          req.POST_VERIFICATION = null
-          return res.send(response(true, `Successfully Logged Out!`));
-        })
-      })
+    //   console.log(req.POST_VERIFICATION.user_id)
+    //   req.POST_VERIICATION.user_id = null;
+    //   const header_auth = req.headers['authorization'];
+    //   bearer_token = header_auth.split(" ")
+    //   API_TOKEN = bearer_token[1]
+    //   if(!API_TOKEN){
+    //    return res.send({success: false, message: 'Missing token header', data: null});
+    //   }else{
+    //     tokenList.pull(API_TOKEN)
+    //     if(!tokenList.includes(API_TOKEN))return res.send({success: false, message: 'Missing token header', data: null});
+      return res.send(response(true, `Successfuly Logged Out!`))
+    //   }
     }
   }
 }
