@@ -19,10 +19,6 @@ const USER_SCHEMA = new Schema({
     type: String,
     default: 'DEFAULT',
   },
-  is_logged_in: {
-    type: Boolean,
-    default: false,
-  },
   friends: [{
     type: String,
     required: false
