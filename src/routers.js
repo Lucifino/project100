@@ -21,6 +21,7 @@ router.get('/', secureConection);
 router.get('/logout', invalidateToken)
 router.get('/getUsers', verifyToken, USER.queries.getUsers)
 router.get('/getUserById', verifyToken, USER.queries.getUserById);
+router.get('/getUserByUsername', verifyToken, USER.queries.getUserByUsername);
 router.get('/getFriends', verifyToken, USER.queries.getFriends);
 router.get('/getFriend', verifyToken, USER.queries.getFriend);
 router.get('/OwnProfile', verifyToken, USER.queries.OwnProfile)

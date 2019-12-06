@@ -90,6 +90,15 @@ module.exports = {
         if(!user) return res.send((response(false, `User does not exist!`)));
         else return res.send((response(true, `Succesfully found user`, user)))
       })
+    },
+
+    getUserByUsername: (req, res) => {
+      const {username} = req.body;
+      return USER.findOne({username})
+      .then(user => {
+        if(!user) return res.send((response(false, `User does not exist!`)));
+        else return res.send((response(true, `Succesfully found user`, user)))
+      })
     }
   },
 
