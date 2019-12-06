@@ -53,7 +53,7 @@ module.exports = {
     // },
 
     getFriends: (req, res) => {
-      const {your_id} = req.POST_VERIFICATION.user_id
+      const your_id = req.POST_VERIFICATION.user_id
 
       return USER.findById(your_id)
       .then(user => {
@@ -100,14 +100,14 @@ module.exports = {
       if(!password) return res.send(response(false, `Pass is required`));
       if(password !== verified_password) return res.send(response(false, `Passwords do not match`));
       if(!personal_information) return res.send(response(false, `Personal information is required!`));
-  
+
       let information = JSON.parse(personal_information);
       const {first_name, middle_name, last_name, birthday, email_address} = information;
       if(!first_name) return res.send(response(false, 'First name is required!'));
       if(!last_name) return res.send(response(false, 'Last name is required!'));
       if(!birthday) return res.send(response(false, 'Birthday is required!'));
       if(!email_address) return res.send(response(false, 'Email address is required!'));
-  
+
       return USER.findOne({username})
       .then(user => {
         if(user) return res.send(response(false, `Username already taken`));
@@ -177,7 +177,7 @@ module.exports = {
       const source_id = req.POST_VERIFICATION.user_id;
 
       if(!username) return res.send(response(false, `Username is required!`));
-      
+
       return USER.findById(source_id)
       .then(source_user =>{
         if(!source_user) return res.send(response(false, `Your user does not exist`));
@@ -293,7 +293,7 @@ module.exports = {
           .then(async (post) => {
             //deletes all comments on user wall and friends wall, as well as friend's comment on posts owned by user and on user wall
             await Promise.all(post.map(async (post_comment) => {
-              const del_comments = await COMMENT.deleteMany({$or : [{author : user.username},{post_id : post_comment._id}]}) 
+              const del_comments = await COMMENT.deleteMany({$or : [{author : user.username},{post_id : post_comment._id}]})
               console.log(del_comments)
             }));
             return POST.deleteMany({$or: [{author : user.username},{destination_wall : user.username}]})
@@ -302,7 +302,7 @@ module.exports = {
               return USER.find({friends : user.username})
               .then(async (unfriend_users) => {
                 await Promise.all(unfriend_users.map(async (unfriend_user) => {
-                  const updated_user_fl = await unfriend_user.updateOne({$pull : {friends : user.username}}) 
+                  const updated_user_fl = await unfriend_user.updateOne({$pull : {friends : user.username}})
                   console.log(updated_user_fl)
                 }));
                 return USER.deleteOne({username: user.username})
