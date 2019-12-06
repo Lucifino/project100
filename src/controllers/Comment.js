@@ -23,17 +23,20 @@ module.exports = {
   },
 
   mutations: {
-    commentToPost: (req, res) => {
+    commentToPost: async (req, res) => {
       const author = req.POST_VERIFICATION.username
       const {post_id, content} = req.body;
       if(!post_id) return res.send(response(false, 'post_id is required!'));
       if(!author) return res.send(response(false, 'author is required!'));
       if(!content) return res.send(response(false, 'content is required!'));
       //@ Validate if user has already the same post
-      return POST.findById(post_id)
-      .then(post => {
-        if(!post) return res.send(response(false, `This post doesn\'t exist!`));
+      return await POST.findById(post_id)
+      .then(async (post) => {
+        if(!post) return res.send(response(false, `This post does not exist!`));
+        user = await USER.findOne({username : post.author})
+        console.log(user)
         //NEW COMMENT
+        if(!user.friends.includes(author) && author !== post.destination_wall) return res.send(response(false, `Can only create comments on friends post!`));
         const new_comment = new COMMENT({
           content, author, post_id
         });
@@ -50,8 +53,8 @@ module.exports = {
     editComment: (req, res) => {
       const author = req.POST_VERIFICATION.username
       const {comment_id, content} = req.body;
-      if(!comment_id) return res.send(response(false, 'comment_id is required!'));
-      if(!content) return res.send(response(false, 'content is required!'));
+      if(!comment_id) return res.send(response(false, `comment_id is required!`));
+      if(!content) return res.send(response(false, `content is required!`));
 
       return USER.findOne({ username: author })
       .then(user =>{
@@ -62,7 +65,7 @@ module.exports = {
           return POST.findById(comment.post_id)
           .then(post => {
             if(!post) return res.send((response(false, `Comment does not exist!`)));
-            if(comment.author != author) return res.send(response(false, `Cannot edit someone else's comment`));
+            if(comment.author != author) return res.send(response(false, `Cannot edit someone elses comment`));
             else {
               if(comment.content == content) return res.send(response(false, `New content is the same as the old one!`));
               else return comment.updateOne({content}, {new:true}).then(result => res.send(response(true, `Succesfully edited comment`, result)))
@@ -80,7 +83,7 @@ module.exports = {
       comment = await COMMENT.findById(comment_id);
       post = await POST.findById(comment.post_id);
 
-      if(!comment) return res.send(response(false, `Comment doesn't  exist`));
+      if(!comment) return res.send(response(false, `Comment does not  exist`));
 
       //If comment is made on your wall, you can delete it
       if(username == post.author){
@@ -93,7 +96,7 @@ module.exports = {
             return res.send(response(true, `Comment deleted!`));
           })
         }else{
-          return res.send(response(true, `Cannot delete others\' comment in unowned posts!`));
+          return res.send(response(true, `Cannot del others comments of unowned posts!`));
         }
       }
     }
